@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 
 const Page = () => {
   const supabase = createClient()
+  // currentDateをlocalStorageに保存して、ページをリロードしても選択した日付が維持されるようにする
   const [currentDate, setCurrentDate] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('currentDate')
@@ -195,20 +196,22 @@ const Page = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex justify-end items-center p-4 border-b border-slate-200 bg-slate-50">
+      <div className="flex justify-end items-center p-2 md:p-4 border-b border-slate-200 bg-slate-50">
         <button
           onClick={handleAddSchedule}
-          className="cursor-pointer bg-sky-600 shadow-lg shadow-sky-500/10 hover:bg-sky-700 text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl font-semibold transition"
+          className="cursor-pointer bg-sky-600 shadow-lg shadow-sky-500/10 hover:bg-sky-700 text-white rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-xl md:text-2xl font-semibold transition"
         >
           +
         </button>
       </div>
-      <div className="grid grid-cols-[300px_1fr] flex-1 overflow-hidden">
-        <div className="flex flex-col">
+      <div className="grid md:grid-cols-[300px_1fr] flex-1 overflow-hidden flex flex-col">
+        <div className="flex flex-col order-1 md:order-2">
           <Calendar currentDate={currentDate} setCurrentDate={setCurrentDate}/>
           <div className="flex-1">TODO!!!</div>
         </div>
-        <ScheduleView schedules={schedules} setIsModalOpen={setIsModalOpen} onEditSchedule={onEditSchedule} />
+        <div className="order-2 md:order-1 flex-1">
+          <ScheduleView schedules={schedules} setIsModalOpen={setIsModalOpen} onEditSchedule={onEditSchedule} />
+        </div>
       </div>
       {isModalOpen && <AddModal formData={formData} setFormData={setFormData} handleCloseModal={handleCloseModal} handleSubmit={handleSubmit} editingSchedule={editingSchedule} handleDeleteSchedule={handleDeleteSchedule} />}
       <ConfirmDialog

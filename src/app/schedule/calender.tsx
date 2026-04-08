@@ -33,12 +33,12 @@ const Calendar = (props: CalendarProps) => {
   }
   return (
       <div className="flex flex-col">
-        <div className="flex items-center justify-between text-sm m-3">
-          <span className="hover:bg-gray-100 rounded-1lg px-2 py-1 cursor-pointer" onClick={handlePrevMonth}>＜</span>
-          {editDate}
-          <span className="hover:bg-gray-100 rounded-1lg px-2 py-1 cursor-pointer" onClick={handleNextMonth}>＞</span>
+        <div className="flex items-center justify-between text-sm m-2 md:m-3">
+          <span className="hover:bg-gray-100 rounded-lg px-2 py-1 cursor-pointer text-sm md:text-base" onClick={handlePrevMonth}>＜</span>
+          <span className="text-base md:text-lg font-medium">{editDate}</span>
+          <span className="hover:bg-gray-100 rounded-lg px-2 py-1 cursor-pointer text-sm md:text-base" onClick={handleNextMonth}>＞</span>
         </div>
-        <div className="h-64 grid grid-cols-7">
+        <div className="h-48 md:h-64 grid grid-cols-7">
           {daysOfWeek.map((day, index) => {
             return (
               <div

@@ -23,7 +23,7 @@ const ConfirmDialog = ({
 
   return (
     <div className="fixed inset-0 bg-[rgba(15,23,42,0.45)] flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-[20px] border border-slate-200/80 bg-white/95 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] p-6">
+      <div className="w-full max-w-xs md:max-w-sm rounded-[20px] border border-slate-200/80 bg-white/95 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] p-4 md:p-6">
         <h2 className="text-lg font-semibold text-slate-900 mb-2">{title}</h2>
         <p className="text-sm text-slate-600 mb-6">{message}</p>
         <div className="flex gap-3">

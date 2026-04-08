@@ -76,15 +76,15 @@ const ScheduleView = ({
       className="flex flex-col items-center h-full overflow-y-auto"
       ref={scheduleContainerRef}
     >
-      <div className="grid grid-cols-[200px_1fr] gap-4 w-full min-h-full p-4 relative">
-        <div className="text-sm text-gray-500 grid p-2">
+      <div className="flex flex-col md:grid md:grid-cols-[200px_1fr] gap-2 md:gap-4 w-full p-2 md:p-4 relative" style={{ minHeight: `${hours.length * 50}px` }}>
+        <div className="text-sm text-gray-500 grid p-2 md:block hidden">
           {hours.map((hour) => (
             <div key={hour} className="h-12" style={{ height: "50px" }}>
               {hour}:00
             </div>
           ))}
         </div>
-        <div className="text-center text-sm text-gray-500 grid p-4 border-b border-gray-200 relative min-h-full">
+        <div className="text-center text-sm text-gray-500 grid p-2 md:p-4 border-b border-gray-200 relative min-h-full md:block">
           {hours.map((hour) => (
             <div
               key={hour}

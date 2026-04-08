@@ -27,7 +27,7 @@ const AddModal = (props: AddModalProps) => {
   const { formData, setFormData, handleCloseModal, handleSubmit, editingSchedule, handleDeleteSchedule } = props
   return (
         <div className="fixed inset-0 bg-[rgba(15,23,42,0.45)] flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] p-7">
+          <div className="w-full max-w-sm md:max-w-md rounded-[20px] md:rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] p-4 md:p-7">
             <div className="mb-6">
               <div className="inline-flex items-center justify-center rounded-full bg-sky-100 text-sky-700 w-11 h-11 mb-3">
                 <span className="text-xl font-semibold">＋</span>
