@@ -204,12 +204,12 @@ const Page = () => {
           +
         </button>
       </div>
-      <div className="grid md:grid-cols-[300px_1fr] flex-1 overflow-hidden flex flex-col">
-        <div className="flex flex-col order-1 md:order-2">
+      <div className="flex flex-col md:grid md:grid-cols-[300px_1fr] flex-1 overflow-hidden">
+        <div className="flex flex-col">
           <Calendar currentDate={currentDate} setCurrentDate={setCurrentDate}/>
           <div className="flex-1">TODO!!!</div>
         </div>
-        <div className="order-2 md:order-1 flex-1">
+        <div className="flex-1 min-h-0 overflow-hidden">
           <ScheduleView schedules={schedules} setIsModalOpen={setIsModalOpen} onEditSchedule={onEditSchedule} />
         </div>
       </div>
