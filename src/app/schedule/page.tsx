@@ -59,6 +59,8 @@ const Page = () => {
       localStorage.setItem('currentDate', currentDate.toISOString())
     }
   }, [currentDate])  
+
+  // モーダルを閉じるときにフォームをリセット
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setEditingSchedule(null)
@@ -76,6 +78,7 @@ const Page = () => {
     setIsConfirmDialogOpen(true)
   }
 
+  // 予定の保存（新規作成と編集の両方に対応）
   const saveSchedule = async () => {
     try {
       if (editingSchedule) {
@@ -167,6 +170,7 @@ const Page = () => {
     setConfirmAction(null)
   }
 
+  // 予定の削除
   const deleteSchedule = async () => {
     try {
       const { error } = await supabase
