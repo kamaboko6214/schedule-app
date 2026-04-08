@@ -8,6 +8,9 @@ import ConfirmDialog from "./ConfirmDialog"
 import { createClient } from '../../../utils/supabase/client'
 import toast from 'react-hot-toast'
 
+const toLocalDateStr = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
 const Page = () => {
   const supabase = createClient()
   // currentDateをlocalStorageに保存して、ページをリロードしても選択した日付が維持されるようにする
@@ -29,6 +32,23 @@ const Page = () => {
   })
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
   const [confirmAction, setConfirmAction] = useState<'save' | 'delete' | null>(null)
+  const [scheduledDates, setScheduledDates] = useState<Set<string>>(new Set())
+
+  // 月単位でスケジュールがある日付を取得
+  const fetchMonthSchedules = async () => {
+    const year = currentDate.getFullYear()
+    const month = currentDate.getMonth()
+    const firstDay = toLocalDateStr(new Date(year, month, 1))
+    const lastDay = toLocalDateStr(new Date(year, month + 1, 0))
+    const { data } = await supabase
+      .from('schedules')
+      .select('date')
+      .gte('date', firstDay)
+      .lte('date', lastDay)
+    if (data) {
+      setScheduledDates(new Set(data.map((s: any) => s.date)))
+    }
+  }
 
   // スケジュールをSupabaseから取得
   const fetchSchedules = async () => {
@@ -36,7 +56,7 @@ const Page = () => {
       const { data, error } = await supabase
         .from('schedules')
         .select('*')
-        .eq('date', currentDate.toISOString().split('T')[0])
+        .eq('date', toLocalDateStr(currentDate))
         .order('created_at', { ascending: false })
       if (error) {
         console.error('Error fetching schedules:', error)
@@ -53,6 +73,11 @@ const Page = () => {
   useEffect(() => {
     fetchSchedules()
   }, [currentDate])
+
+  // 月が変わったときに月単位のスケジュールを取得
+  useEffect(() => {
+    fetchMonthSchedules()
+  }, [currentDate.getFullYear(), currentDate.getMonth()])
 
   // currentDateが変更されたらlocalStorageに保存
   useEffect(() => {
@@ -103,6 +128,7 @@ const Page = () => {
           toast.success('予定を更新しました！')
           handleCloseModal()
           fetchSchedules()
+          fetchMonthSchedules()
         }
       } else {
         // 新規作成の場合
@@ -114,7 +140,7 @@ const Page = () => {
               start_time: formData.startTime,
               end_time: formData.endTime,
               description: formData.description,
-              date: currentDate.toISOString().split('T')[0],
+              date: toLocalDateStr(currentDate),
             }
           ])
           .select()
@@ -127,6 +153,7 @@ const Page = () => {
           toast.success('予定を保存しました！')
           handleCloseModal()
           fetchSchedules()
+          fetchMonthSchedules()
         }
       }
     } catch (error) {
@@ -187,6 +214,7 @@ const Page = () => {
         toast.success('予定を削除しました！')
         handleCloseModal()
         fetchSchedules()
+        fetchMonthSchedules()
       }
     } catch (error) {
       console.error('Unexpected error:', error)
@@ -196,7 +224,8 @@ const Page = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex justify-end items-center p-2 md:p-4 border-b border-slate-200 bg-slate-50">
+      <div className="flex justify-between items-center p-2 md:p-4 border-b border-slate-200 bg-slate-50">
+        <h1 className="ml-2 text-xl text-gray-700 md:text-2xl font-bold ">スケジュールアプリ</h1>
         <button
           onClick={handleAddSchedule}
           className="cursor-pointer bg-sky-600 shadow-lg shadow-sky-500/10 hover:bg-sky-700 text-white rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-xl md:text-2xl font-semibold transition"
@@ -206,7 +235,7 @@ const Page = () => {
       </div>
       <div className="flex flex-col md:grid md:grid-cols-[300px_1fr] flex-1 overflow-hidden">
         <div className="flex flex-col">
-          <Calendar currentDate={currentDate} setCurrentDate={setCurrentDate}/>
+          <Calendar currentDate={currentDate} setCurrentDate={setCurrentDate} scheduledDates={scheduledDates} />
           <div className="flex-1">TODO!!!</div>
         </div>
         <div className="flex-1 min-h-0 overflow-hidden">

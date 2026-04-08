@@ -4,9 +4,11 @@ import { useState } from "react"
 type CalendarProps = {
   currentDate: Date
   setCurrentDate: React.Dispatch<React.SetStateAction<Date>>
+  scheduledDates?: Set<string>
 }
 
 const Calendar = (props: CalendarProps) => {
+  const { scheduledDates } = props
   const date = props.currentDate
   const year: number = date.getFullYear()
   const month: number = date.getMonth()
@@ -22,7 +24,7 @@ const Calendar = (props: CalendarProps) => {
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
   const setDate = (e: React.MouseEvent<HTMLDivElement>) => {
-    const selectedDay = parseInt(e.currentTarget.textContent || "1", 10)
+    const selectedDay = parseInt(e.currentTarget.dataset.day || "1", 10)
     props.setCurrentDate(new Date(year, month, selectedDay))
   }
   const handlePrevMonth = () => {
@@ -55,13 +57,17 @@ const Calendar = (props: CalendarProps) => {
           {days.map((day, index) => {
             const isSelect = date.getDate() === day
             const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+            const hasSchedule = scheduledDates?.has(dateStr)
             return (
               <div
                 key={index}
-                className={`cursor-pointer text-center text-sm grid p-2 rounded-full ${isSelect ? " bg-blue-100 font-bold hover:bg-blue-200" : "text-gray-500 hover:bg-gray-100"} ${isToday ? "border border-blue-600" : ""}`}
+                data-day={day}
+                className={`cursor-pointer text-center text-sm flex flex-col items-center justify-center p-1 rounded-full ${isSelect ? "bg-blue-100 font-bold hover:bg-blue-200" : "text-gray-500 hover:bg-gray-100"} ${isToday ? "border border-blue-600" : ""}`}
                 onClick={setDate}
               >
-                {day}
+                <span>{day}</span>
+                {hasSchedule && <div className="w-1 h-1 rounded-full bg-sky-500 mt-0.5" />}
               </div>
             )
           })}

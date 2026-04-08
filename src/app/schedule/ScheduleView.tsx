@@ -71,57 +71,60 @@ const ScheduleView = ({
     return { top, height }
   }
 
+  const HOUR_HEIGHT = 50
+
   return (
     <div
-      className="flex flex-col items-center h-full overflow-y-auto"
+      className="flex h-full overflow-y-auto"
       ref={scheduleContainerRef}
     >
-      <div className="flex flex-col md:grid md:grid-cols-[200px_1fr] gap-2 md:gap-4 w-full p-2 md:p-4 relative" style={{ minHeight: `${hours.length * 50}px` }}>
-        <div className="text-sm text-gray-500 grid p-2 md:block hidden">
-          {hours.map((hour) => (
-            <div key={hour} className="h-12" style={{ height: "50px" }}>
-              {hour}:00
-            </div>
-          ))}
-        </div>
-        <div className="text-center text-sm text-gray-500 grid p-2 md:p-4 border-b border-gray-200 relative min-h-full md:block">
-          {hours.map((hour) => (
+      {/* 時間軸 */}
+      <div className="relative flex-shrink-0 w-12" style={{ height: `${hours.length * HOUR_HEIGHT}px` }}>
+        {hours.map((hour) => (
+          <div
+            key={hour}
+            className="absolute w-full text-right pr-2 text-xs text-gray-400 leading-none"
+            style={{ top: `${(hour - startHour) * HOUR_HEIGHT}px` }}
+          >
+            {hour}:00
+          </div>
+        ))}
+      </div>
+
+      {/* スケジュールエリア */}
+      <div className="relative flex-1 border-l border-gray-200" style={{ height: `${hours.length * HOUR_HEIGHT}px` }}>
+        {/* 時間の区切り線 */}
+        {hours.map((hour) => (
+          <div
+            key={hour}
+            className="border-b border-gray-100"
+            style={{ height: `${HOUR_HEIGHT}px` }}
+          />
+        ))}
+
+        {/* スケジュールの表示 */}
+        {schedules.map((schedule) => {
+          const [scheduleStartHour] = schedule.start_time.split(":").map(Number)
+          const hourIndex = scheduleStartHour - startHour
+          const baseTop = hourIndex * HOUR_HEIGHT
+          const { top: relativeTop, height } = getSchedulePosition(schedule.start_time, schedule.end_time)
+
+          return (
             <div
-              key={hour}
-              className="border-b border-gray-100"
-              style={{ height: "50px" }}
-            ></div>
-          ))}
-
-          {/* スケジュールの表示 */}
-          {schedules.map((schedule) => {
-            const [scheduleStartHour] = schedule.start_time
-              .split(":")
-              .map(Number)
-            const hourIndex = scheduleStartHour - startHour
-            const baseTop = hourIndex * 50 // 各時間のベース位置
-            const { top: relativeTop, height } = getSchedulePosition(schedule.start_time, schedule.end_time)
-
-            return (
-              <div
-                key={schedule.id}
-                className="absolute left-2 right-2 bg-sky-100 m-4 border border-sky-200 rounded-lg p-2 shadow-sm cursor-pointer hover:bg-sky-200 transition-colors flex items-center justify-center"
-                style={{
-                  top: `${baseTop + relativeTop}px`,
-                  height: `${Math.max(height, 24)}px`, // 最小高さを24pxに設定
-                }}
-                onClick={() => onEditSchedule(schedule)}
-              >
-                <div
-                  className="font-semibold text-sky-900 text-sm truncate cursor-pointer text-center"
-                  onClick={() => setIsModalOpen(true)}
-                >
-                  {schedule.title}
-                </div>
+              key={schedule.id}
+              className="absolute left-1 right-1 bg-sky-100 border border-sky-200 rounded-lg p-2 shadow-sm cursor-pointer hover:bg-sky-200 transition-colors flex items-center justify-center"
+              style={{
+                top: `${baseTop + relativeTop}px`,
+                height: `${Math.max(height, 24)}px`,
+              }}
+              onClick={() => onEditSchedule(schedule)}
+            >
+              <div className="font-semibold text-sky-900 text-sm truncate text-center">
+                {schedule.title}
               </div>
-            )
-          })}
-        </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
