@@ -4,12 +4,19 @@ import { useState, useEffect } from "react"
 import Calendar from "./calender"
 import ScheduleView from "./ScheduleView"
 import AddModal from "./addmodal"
+import ConfirmDialog from "./ConfirmDialog"
 import { createClient } from '../../../utils/supabase/client'
 import toast from 'react-hot-toast'
 
 const Page = () => {
   const supabase = createClient()
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('currentDate')
+      return saved ? new Date(saved) : new Date()
+    }
+    return new Date()
+  })
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [schedules, setSchedules] = useState<any[]>([])
   const [editingSchedule, setEditingSchedule] = useState<any>(null)
@@ -19,6 +26,8 @@ const Page = () => {
     endTime: "",
     description: "",
   })
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<'save' | 'delete' | null>(null)
 
   // スケジュールをSupabaseから取得
   const fetchSchedules = async () => {
@@ -26,8 +35,8 @@ const Page = () => {
       const { data, error } = await supabase
         .from('schedules')
         .select('*')
+        .eq('date', currentDate.toISOString().split('T')[0])
         .order('created_at', { ascending: false })
-
       if (error) {
         console.error('Error fetching schedules:', error)
         toast.error(`スケジュールの取得に失敗しました: ${error.message}`)
@@ -39,10 +48,17 @@ const Page = () => {
     }
   }
 
-  // コンポーネントマウント時にデータを取得
+  // コンポーネントマウント時とcurrentDate変更時にデータを取得
   useEffect(() => {
     fetchSchedules()
-  }, [])  
+  }, [currentDate])
+
+  // currentDateが変更されたらlocalStorageに保存
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('currentDate', currentDate.toISOString())
+    }
+  }, [currentDate])  
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setEditingSchedule(null)
@@ -56,7 +72,11 @@ const Page = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+    setConfirmAction('save')
+    setIsConfirmDialogOpen(true)
+  }
+
+  const saveSchedule = async () => {
     try {
       if (editingSchedule) {
         // 編集の場合
@@ -126,6 +146,49 @@ const Page = () => {
     setIsModalOpen(true)
   }
 
+  const handleDeleteSchedule = async () => {
+    if (!editingSchedule) return
+    setConfirmAction('delete')
+    setIsConfirmDialogOpen(true)
+  }
+
+  const onConfirmAction = async () => {
+    if (confirmAction === 'save') {
+      await saveSchedule()
+    } else if (confirmAction === 'delete') {
+      await deleteSchedule()
+    }
+    setIsConfirmDialogOpen(false)
+    setConfirmAction(null)
+  }
+
+  const onCancelAction = () => {
+    setIsConfirmDialogOpen(false)
+    setConfirmAction(null)
+  }
+
+  const deleteSchedule = async () => {
+    try {
+      const { error } = await supabase
+        .from('schedules')
+        .delete()
+        .eq('id', editingSchedule.id)
+
+      if (error) {
+        console.error('Error deleting schedule:', error)
+        toast.error(`予定の削除に失敗しました: ${error.message}`)
+      } else {
+        console.log('Schedule deleted successfully')
+        toast.success('予定を削除しました！')
+        handleCloseModal()
+        fetchSchedules()
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error)
+      toast.error('予期しないエラーが発生しました')
+    }
+  }
+
   return (
     <div className="flex flex-col h-screen">
       <div className="flex justify-end items-center p-4 border-b border-slate-200 bg-slate-50">
@@ -138,12 +201,21 @@ const Page = () => {
       </div>
       <div className="grid grid-cols-[300px_1fr] flex-1 overflow-hidden">
         <div className="flex flex-col">
-          <Calendar currentDate={currentDate} setCurrentDate={setCurrentDate} />
+          <Calendar currentDate={currentDate} setCurrentDate={setCurrentDate}/>
           <div className="flex-1">TODO!!!</div>
         </div>
         <ScheduleView schedules={schedules} setIsModalOpen={setIsModalOpen} onEditSchedule={onEditSchedule} />
       </div>
-        {isModalOpen && <AddModal formData={formData} setFormData={setFormData} handleCloseModal={handleCloseModal} handleSubmit={handleSubmit} editingSchedule={editingSchedule} />}
+      {isModalOpen && <AddModal formData={formData} setFormData={setFormData} handleCloseModal={handleCloseModal} handleSubmit={handleSubmit} editingSchedule={editingSchedule} handleDeleteSchedule={handleDeleteSchedule} />}
+      <ConfirmDialog
+        isOpen={isConfirmDialogOpen}
+        title={confirmAction === 'delete' ? '予定を削除しますか？' : 'この内容で保存しますか？'}
+        message={confirmAction === 'delete' ? 'この操作は取り消せません。' : '予定を保存します。よろしいですか？'}
+        onConfirm={onConfirmAction}
+        onCancel={onCancelAction}
+        confirmText={confirmAction === 'delete' ? '削除する' : '保存する'}
+        isDangerous={confirmAction === 'delete'}
+      />
     </div>
   )
 }

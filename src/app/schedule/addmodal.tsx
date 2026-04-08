@@ -20,10 +20,11 @@ type AddModalProps = {
     end_time: string
     description: string
   } | null
+  handleDeleteSchedule?: () => void
 }
 
 const AddModal = (props: AddModalProps) => {
-  const { formData, setFormData, handleCloseModal, handleSubmit, editingSchedule } = props
+  const { formData, setFormData, handleCloseModal, handleSubmit, editingSchedule, handleDeleteSchedule } = props
   return (
         <div className="fixed inset-0 bg-[rgba(15,23,42,0.45)] flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] p-7">
@@ -91,19 +92,30 @@ const AddModal = (props: AddModalProps) => {
                 />
               </div>
               <div className="flex flex-col gap-3 pt-1 sm:flex-row">
-                <button
-                  type="submit"
-                  className="flex-1 rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
-                >
-                  {editingSchedule ? '更新する' : '保存する'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-                >
-                  キャンセル
-                </button>
+                {editingSchedule && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteSchedule}
+                    className="rounded-2xl bg-red-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700"
+                  >
+                    削除する
+                  </button>
+                )}
+                <div className="flex flex-col gap-3 flex-1 sm:flex-row">
+                  <button
+                    type="submit"
+                    className="flex-1 rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
+                  >
+                    {editingSchedule ? '更新する' : '保存する'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                  >
+                    キャンセル
+                  </button>
+                </div>
               </div>
             </form>
           </div>

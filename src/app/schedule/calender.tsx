@@ -54,10 +54,11 @@ const Calendar = (props: CalendarProps) => {
           ))}
           {days.map((day, index) => {
             const isSelect = date.getDate() === day
+            const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year
             return (
               <div
                 key={index}
-                className={`cursor-pointer text-center text-sm grid p-2 rounded-full ${isSelect ? " bg-blue-100 font-bold hover:bg-blue-200" : "text-gray-500 hover:bg-gray-100"}`}
+                className={`cursor-pointer text-center text-sm grid p-2 rounded-full ${isSelect ? " bg-blue-100 font-bold hover:bg-blue-200" : "text-gray-500 hover:bg-gray-100"} ${isToday ? "border border-blue-600" : ""}`}
                 onClick={setDate}
               >
                 {day}
