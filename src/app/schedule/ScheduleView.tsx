@@ -17,73 +17,64 @@ type ScheduleViewProps = {
   onEditSchedule: (schedule: Schedule) => void
 }
 
+const HOUR_HEIGHT = 64
+const DEFAULT_START = 6
+const DEFAULT_END = 22
+
 const ScheduleView = ({
   schedules,
   setIsModalOpen,
   onEditSchedule,
 }: ScheduleViewProps) => {
   const scheduleContainerRef = useRef<HTMLDivElement>(null)
-  // 表示する時間帯の範囲
+
+  // スケジュールの時間に合わせて表示範囲を動的に決定
   const getTimeRange = () => {
-    return { startHour: 0, endHour: 24 }
-  }
-  const { startHour, endHour } = getTimeRange()
-
-  // スケジュールがある時間帯に自動でスクロールする
-  useEffect(() => {
-    if (schedules.length > 0) {
-      const firstSchedule = schedules[0]
-      const [scheduleStartHour] = firstSchedule.start_time
-        .split(":")
-        .map(Number)
-      const hourIndex = scheduleStartHour - startHour
-      const baseTop = hourIndex * 50
-      const { top: relativeTop } = getSchedulePosition(
-        firstSchedule.start_time,
-        firstSchedule.end_time,
-      )
-      const scrollTop = baseTop + relativeTop
-      scheduleContainerRef.current?.scrollTo({
-        top: scrollTop,
-        behavior: "smooth",
-      })
+    if (schedules.length === 0) return { startHour: DEFAULT_START, endHour: DEFAULT_END }
+    const allHours = schedules.flatMap((s) => [
+      parseInt(s.start_time.split(":")[0]),
+      Math.ceil(parseInt(s.end_time.split(":")[0]) + parseInt(s.end_time.split(":")[1]) / 60),
+    ])
+    return {
+      startHour: Math.min(DEFAULT_START, ...allHours),
+      endHour: Math.max(DEFAULT_END, ...allHours),
     }
-  }, [schedules, startHour])
+  }
 
-  const hours = Array.from(
-    { length: endHour - startHour + 1 },
-    (_, index) => startHour + index,
-  )
+  const { startHour, endHour } = getTimeRange()
+  const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i)
 
   // スケジュールを時間軸上に配置するための計算
-  const getSchedulePosition = (startTime: string, endTime: string): { top: number, height: number } => {
-    const [startHour, startMinute] = startTime.split(":").map(Number)
-    const [endHour, endMinute] = endTime.split(":").map(Number)
-
-    const startTotalMinutes = startHour * 60 + startMinute
-    const endTotalMinutes = endHour * 60 + endMinute
-
-    // startHourからの相対位置を計算
-    const relativeStartMinutes = startTotalMinutes - startHour * 60
-    const top = (relativeStartMinutes / 60) * 50
-    const height = ((endTotalMinutes - startTotalMinutes) / 60) * 50
-
+  const getSchedulePosition = (startTime: string, endTime: string) => {
+    const [sH, sM] = startTime.split(":").map(Number)
+    const [eH, eM] = endTime.split(":").map(Number)
+    const top = ((sH - startHour) * 60 + sM) / 60 * HOUR_HEIGHT
+    const height = ((eH * 60 + eM) - (sH * 60 + sM)) / 60 * HOUR_HEIGHT
     return { top, height }
   }
 
-  const HOUR_HEIGHT = 50
+  // スケジュールがある時間帯に自動スクロール
+  useEffect(() => {
+    if (schedules.length > 0) {
+      const firstSchedule = schedules[0]
+      const { top } = getSchedulePosition(firstSchedule.start_time, firstSchedule.end_time)
+      scheduleContainerRef.current?.scrollTo({ top: top - HOUR_HEIGHT, behavior: "smooth" })
+    } else {
+      scheduleContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" })
+    }
+  }, [schedules])
 
   return (
-    <div
-      className="flex h-full overflow-y-auto"
-      ref={scheduleContainerRef}
-    >
+    <div className="flex h-full overflow-y-auto" ref={scheduleContainerRef}>
       {/* 時間軸 */}
-      <div className="relative flex-shrink-0 w-12" style={{ height: `${hours.length * HOUR_HEIGHT}px` }}>
+      <div
+        className="relative flex-shrink-0 w-14"
+        style={{ height: `${hours.length * HOUR_HEIGHT}px` }}
+      >
         {hours.map((hour) => (
           <div
             key={hour}
-            className="absolute w-full text-right pr-2 text-xs text-gray-400 leading-none"
+            className="absolute w-full text-right pr-3 text-xs text-gray-400 leading-none"
             style={{ top: `${(hour - startHour) * HOUR_HEIGHT}px` }}
           >
             {hour}:00
@@ -92,7 +83,10 @@ const ScheduleView = ({
       </div>
 
       {/* スケジュールエリア */}
-      <div className="relative flex-1 border-l border-gray-200" style={{ height: `${hours.length * HOUR_HEIGHT}px` }}>
+      <div
+        className="relative flex-1 border-l border-gray-200"
+        style={{ height: `${hours.length * HOUR_HEIGHT}px` }}
+      >
         {/* 時間の区切り線 */}
         {hours.map((hour) => (
           <div
@@ -102,26 +96,29 @@ const ScheduleView = ({
           />
         ))}
 
+        {/* 予定なし */}
+        {schedules.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <p className="text-sm text-gray-300">この日の予定はありません</p>
+          </div>
+        )}
+
         {/* スケジュールの表示 */}
         {schedules.map((schedule) => {
-          const [scheduleStartHour] = schedule.start_time.split(":").map(Number)
-          const hourIndex = scheduleStartHour - startHour
-          const baseTop = hourIndex * HOUR_HEIGHT
-          const { top: relativeTop, height } = getSchedulePosition(schedule.start_time, schedule.end_time)
-
+          const { top, height } = getSchedulePosition(schedule.start_time, schedule.end_time)
           return (
             <div
               key={schedule.id}
-              className="absolute left-1 right-1 bg-sky-100 border border-sky-200 rounded-lg p-2 shadow-sm cursor-pointer hover:bg-sky-200 transition-colors flex items-center justify-center"
-              style={{
-                top: `${baseTop + relativeTop}px`,
-                height: `${Math.max(height, 24)}px`,
-              }}
+              className="absolute left-1 right-1 bg-sky-100 border border-sky-200 rounded-lg px-2 py-1 shadow-sm cursor-pointer hover:bg-sky-200 transition-colors overflow-hidden"
+              style={{ top: `${top}px`, height: `${Math.max(height, 28)}px` }}
               onClick={() => onEditSchedule(schedule)}
             >
-              <div className="font-semibold text-sky-900 text-sm truncate text-center">
+              <p className="font-semibold text-sky-900 text-xs leading-tight truncate">
                 {schedule.title}
-              </div>
+              </p>
+              <p className="text-sky-600 text-xs leading-tight">
+                {schedule.start_time} 〜 {schedule.end_time}
+              </p>
             </div>
           )
         })}
